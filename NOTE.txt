@@ -1,0 +1,15 @@
+Dev dependencies are those which are done during development and not taken into production
+
+Middleswares-> 
+It has codes that are needed to be ran in-between.
+That is if I want to send request to server and in between that request if I want to put some check-in functionality then at that time Middleswares comes into business
+
+Utlis folder contain utility files used for specific functions like file upload, tokens sharing etc.
+
+
+While using Database use trycatch and async await
+
+using dotenv as an expermental feature in package
+"scripts": {
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+  },
