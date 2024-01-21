@@ -9,7 +9,9 @@ Utlis folder contain utility files used for specific functions like file upload,
 
 While using Database use trycatch and async await
 
-using dotenv as an expermental feature in package
+since we are importing dotenv which is an experimental process, so we are using dotenv as an expermental feature in package.json
 "scripts": {
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
+
+=> app.use() is used when we want to set some middleware or configuration
