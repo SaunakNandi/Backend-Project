@@ -1,3 +1,5 @@
+=> dotenv is a Node.js module that loads environment variables from a .env file into process.env
+
 Dev dependencies are those which are done during development and not taken into production
 
 Middleswares-> 
