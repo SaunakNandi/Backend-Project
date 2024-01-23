@@ -1,4 +1,6 @@
 import mongoose, { Schema } from "mongoose";
+import { Jwt } from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 const userSchema = new Schema(
   {
@@ -18,7 +20,7 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-    fullname: { type: String, required: true, trim: true, index: true },
+    fullName: { type: String, required: true, trim: true, index: true },
     avatar: { type: String, required: true }, // cloudinary url provides url whenever we save some image,video etc.
     coverImage: { type: String }, // cloudinary url
     watchHistory: [{ type: Schema.Types.ObjectId, ref: "Video" }],
@@ -27,5 +29,48 @@ const userSchema = new Schema(
   },
   { timestamps: true }
 );
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next(); // if not modified don't update the password
+
+  this.password = bcrypt.hash(this.password, 10);
+  next();
+});
+
+// bcrypt can hash the password and can also check the password
+userSchema.methods.isPasswordCorrect = async function (password) {
+  //this.password is the encrypted password
+  return await bcrypt.compare(password, this.password);
+};
+
+// creating a method to generate access and refresh token
+
+userSchema.methods.generateAccessToken = function () {
+  //payload or data
+  return jwt.sign(
+    // return the access token after being generated
+    {
+      _id: this._id,
+      email: this.email,
+      username: this.username,
+      fullname: this.fullName,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
+  );
+};
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
+  );
+};
 
 export const User = mongoose.model("User", userSchema);

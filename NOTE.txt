@@ -17,3 +17,5 @@ since we are importing dotenv which is an experimental process, so we are using 
   },
 
 => app.use() is used when we want to set some middleware or configuration
+
+=> ` bcrypt ` helps us to hash passwords i.e solves the problem of encryption, dycryption
