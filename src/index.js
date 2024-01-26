@@ -3,6 +3,7 @@
 // we are using dotenv because we want all pur environment variables to be available whenever our applications loads
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
+import { app } from "./app.js";
 
 dotenv.config({
   path: "./env",
