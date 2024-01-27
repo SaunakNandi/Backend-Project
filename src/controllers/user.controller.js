@@ -28,7 +28,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
   if (existedUser) {
@@ -36,16 +36,25 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // provided by multer
-  console.log(req.files);
-  const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
-  if (!avatarLocalPath) throw new ApiError(400, "Avatar fle is required");
+  //console.log(req.files?.avatar[0]?.path);
+  const avatarLocalPath = req.files?.avatar[0]?.path;
+  //const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+  let coverImageLocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  )
+    coverImageLocalPath = req.files.coverImage[0].path;
+
+  if (!avatarLocalPath) throw new ApiError(400, "Path not found");
 
   const avatar = await uploadOnCloudinary(avatarLocalPath); // uploading might takes time
+  console.log(avatar);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
-  if (avatar) throw new ApiError(400, "Avatar fle is required");
+  if (!avatar) throw new ApiError(400, "Avatar fle is required");
 
   const user = await User.create({
     fullName,
@@ -55,7 +64,7 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     username: username.toLowerCase(),
   });
-
+  console.log(user);
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken" // don't select password and refreshtoken
   );

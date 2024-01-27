@@ -1,8 +1,8 @@
 // Making a wrapper function which accepts a function and then process it and return the output
 
-const asyncHandler = (fn) => {
+const asyncHandler = (requestHandler) => {
   return (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch((err) => next(err));
+    Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err));
   };
 };
 export { asyncHandler };

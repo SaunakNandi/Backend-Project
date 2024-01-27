@@ -11,7 +11,7 @@ app.use(
 );
 
 // Configuration in express
-app.use(express.json({ limit: "20kb" })); // limiting the size of JSON
+app.use(express.json({ limit: "16kb" })); // limiting the size of JSON
 
 // if we search for `Call of Duty` the search url get encoded and inplace of space %20 get appended. This way we are telling express
 // to understand this type of url
