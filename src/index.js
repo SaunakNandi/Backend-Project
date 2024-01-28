@@ -1,6 +1,6 @@
 //require('dotenv').config({path:})
 
-// we are using dotenv because we want all pur environment variables to be available whenever our applications loads
+// we are using dotenv because we want all our environment variables to be available whenever our application loads
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import { app } from "./app.js";

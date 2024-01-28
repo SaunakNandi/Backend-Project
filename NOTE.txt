@@ -19,3 +19,18 @@ since we are importing dotenv which is an experimental process, so we are using 
 => app.use() is used when we want to set some middleware or configuration
 
 => ` bcrypt ` helps us to hash passwords i.e solves the problem of encryption, dycryption
+
+
+=>=>=>=> CODE breakdown- for [app.use] in src/app.js
+
+const app = express();: This line creates an instance of the Express application. The express() function is a top-level function exported by the Express.js framework that creates a new Express application.
+
+app.use(express.json({ limit: "16kb" }));: This line adds middleware to parse incoming requests with JSON payloads. It uses express.json() middleware provided by Express to parse the request body when it contains JSON data. The { limit: "16kb" } option specifies the maximum size of the JSON payload that the server will accept, limiting it to 16 kilobytes.
+
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));: This line adds middleware to parse incoming requests with URL-encoded payloads. It uses express.urlencoded() middleware to parse data submitted through HTML forms. The options { extended: true, limit: "16kb" } specify that the URL-encoded data can contain rich objects (extended: true) and also sets a limit of 16 kilobytes for the payload.
+
+app.use(express.static("public"));: This line serves static files from the "public" directory. The express.static() middleware is used to serve static files such as images, stylesheets, and JavaScript files. In this case, it is configured to serve files from the "public" directory.
+
+app.use(cookieParser());: This line adds middleware to parse cookies from the incoming requests. The cookieParser() middleware parses cookies attached to the client's request and makes them available in the req.cookies object. This allows the server to easily work with cookies sent by the client.
+
+In summary, these lines of code set up an Express.js application with middleware for handling JSON and URL-encoded data in requests, serving static files from a "public" directory, and parsing cookies from incoming requests.

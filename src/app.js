@@ -3,6 +3,8 @@ import cors from "cors"; // cross origin share
 import cookieParser from "cookie-parser";
 
 const app = express();
+
+// Mounts the specified middleware function (cors in this case) at the specified path. If no path is specified, it defaults to the root path ("/").
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
@@ -10,7 +12,7 @@ app.use(
   })
 );
 
-// Configuration in express
+// Configuration in express [Explained in notes -> marker app.use]
 app.use(express.json({ limit: "16kb" })); // limiting the size of JSON
 
 // if we search for `Call of Duty` the search url get encoded and inplace of space %20 get appended. This way we are telling express
