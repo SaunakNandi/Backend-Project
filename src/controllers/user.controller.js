@@ -8,13 +8,13 @@ const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const newrefreshToken = user.generateRefreshToken();
 
-    user.refreshToken = refreshToken;
+    user.refreshToken = newrefreshToken;
     // this is done because while saving, the required field(used while creating userSchema) gets in and ask for that perticular field so we are asking to ignore the validation
     await user.save({ validateBeforeSave: false });
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken: newrefreshToken };
   } catch (error) {
     throw new ApiError(500, "Internal Error for refresh and access token");
   }
@@ -106,27 +106,28 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const { email, username, password } = req.body;
 
-  // if (!username && !email)
-  if (!username || !email) {
+  // if (!username || !email)
+  if (!username && !email) {
     throw new ApiError(400, "username or email required");
   }
 
   const user = await User.findOne({
     $or: [{ username }, { email }],
   });
+  //console.log(user);
   if (!user) throw new ApiError(404, "User not found");
 
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) throw new ApiError(401, "Invalid user credentials");
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user._id
-  );
+  const { accessToken, refreshToken: newrefreshToken } =
+    await generateAccessAndRefreshTokens(user._id);
 
-  const loggedInUser = user
-    .findById(user._id)
-    .select("-password -refreshToken");
+  //console.log(user);
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
 
   // sending cookies
   const options = {
@@ -139,7 +140,7 @@ const loginUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("refreshToken", newrefreshToken, options)
     .json(
       new ApiResponse(
         200,
@@ -147,7 +148,7 @@ const loginUser = asyncHandler(async (req, res) => {
           // this will allow user to save accessToken and refreshToken may be in localStorage or may be he need it for personal use/developement
           user: loggedInUser,
           accessToken,
-          refreshToken,
+          newrefreshToken,
         },
         "User logged In Successfully"
       )
@@ -158,7 +159,9 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: { refreshToken: undefined },
+      $set: {
+        refreshToken: null, // this removes the field from document
+      },
     },
     {
       new: true, // return the updated data
@@ -173,5 +176,12 @@ const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged Out"));
+});
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
+
+  if (incomingRefreshToken) throw new ApiError(401, "Unauthorized request");
 });
 export { registerUser, loginUser, logoutUser };

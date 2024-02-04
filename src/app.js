@@ -11,6 +11,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser()); // for cookies
 
 // Configuration in express [Explained in notes -> marker app.use]
 app.use(express.json({ limit: "16kb" })); // limiting the size of JSON
@@ -19,8 +20,6 @@ app.use(express.json({ limit: "16kb" })); // limiting the size of JSON
 // to understand this type of url
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public")); // keeping assets stored in server. For this we are maknig a public folder(publc folder was already created)
-
-app.use(cookieParser()); // for cookies
 
 // routes import
 
