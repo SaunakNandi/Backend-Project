@@ -68,7 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     fullName,
     avatar: avatar.url,
-    //filePath:avatarLocalPath,
+    filePath:avatarLocalPath,
     coverImage: coverImage?.url || "",
     email,
     password,
@@ -264,12 +264,11 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
 
   if(!avatarLocalPath) throw new ApiError(400,"cannot find avatar")
 
-  // const data = await User.findById(req.user?._id)
+  const person = await User.findById(req.user?._id)
+  const filePath=person.filePath
 
-  // const filePath=data.filePath
-  // console.log("filePath",filePath)
+  await deleteOnCloudinary(filePath)
 
-  // await deleteOnCloudinary(filePath)
   const avatar=await uploadOnCloudinary(avatarLocalPath)
   console.log("avatar", avatar)
 
