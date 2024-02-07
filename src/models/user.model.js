@@ -22,11 +22,11 @@ const userSchema = new Schema(
     },
     fullName: { type: String, required: true, trim: true, index: true },
     avatar: { type: String, required: true }, // cloudinary url provides url whenever we save some image,video etc.
-    filePath: { type: String},
     coverImage: { type: String }, // cloudinary url
     watchHistory: [{ type: Schema.Types.ObjectId, ref: "Video" }],
     password: { type: String, required: [true, "Password is required"] },
     refreshToken: { type: String },
+    // filePath: { type: String},
   },
   { timestamps: true }
 );

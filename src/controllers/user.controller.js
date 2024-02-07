@@ -279,7 +279,7 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
     {
       $set:{
         avatar:avatar.url,
-        filePath:avatarLocalPath
+        //filePath:avatarLocalPath
       }
     },
     {new:true}).select("-password") 
