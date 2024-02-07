@@ -1,25 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
-const generateAccessAndRefreshTokens = async (userId) => {
-  try {
-    const user = await User.findById(userId);
-    const accessToken = user.generateAccessToken();
-    const newrefreshToken = user.generateRefreshToken();
-
-    user.refreshToken = newrefreshToken;
-    // this is done because while saving, the required field(used while creating userSchema) gets in and ask for that perticular field so we are asking to ignore the validation
-    await user.save({ validateBeforeSave: false });
-
-    return { accessToken, refreshToken: newrefreshToken };
-  } catch (error) {
-    throw new ApiError(500, "Internal Error for refresh and access token");
-  }
-};
 
 /* { using asyncHandler you can see the error while sending api request in `Thunder Client`
  if you remove the asyncHandler and use simple try catch you can onlu see the error in cmd prompt } */
@@ -37,6 +22,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // return respon
 
   // the form field passed during api testing is the `req` value
+  
   console.log(req);
   const { fullName, email, username, password } = req.body;
 
@@ -82,6 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     fullName,
     avatar: avatar.url,
+    //filePath:avatarLocalPath,
     coverImage: coverImage?.url || "",
     email,
     password,
@@ -91,20 +78,37 @@ const registerUser = asyncHandler(async (req, res) => {
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken" // don't select password and refreshtoken
   );
-  if (!createdUser) throw new ApiError(500, "Uer failed");
+  if (!createdUser) throw new ApiError(500, "User failed");
 
   return res
     .status(201)
     .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
+
+const generateAccessAndRefreshTokens = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const newrefreshToken = user.generateRefreshToken();
+
+    user.refreshToken = newrefreshToken;
+    // this is done because while saving, the required field(used while creating userSchema) gets in and ask for that perticular field so we are asking to ignore the validation
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken: newrefreshToken };
+  } catch (error) {
+    throw new ApiError(500, "Internal Error for refresh and access token");
+  }
+};
+
 const loginUser = asyncHandler(async (req, res) => {
   // req body -> data
-  // username or email
+  // check login by username or email
   // find the user
   // password check
-  // access and refresh token  ( concept explained in Complete backend developer course part 2 (2:44))
-
+  // generate access and refresh token  ( concept explained in Complete backend developer course part 2 (2:44))
+  //  
   const { email, username, password } = req.body;
   console.log(email)
   // if (!username || !email)
@@ -130,13 +134,14 @@ const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  // sending cookies
-  const options = {
+  // securing the cookie
+  const options = { // discussed in NOTE.txt
     // these options will not allow to modify cookies from frontend but can be done from server
     httpOnly: true,
     secure: true,
   };
-
+  
+  // sending cookies
   // we are getting this .cookie() from cookieParser()
   return res
     .status(200)
@@ -239,7 +244,7 @@ const updateAccountDetails=asyncHandler(async(req,res)=>{
   if(!fullName || !email)
     throw new ApiError(400,"All fields are required")
 
-  const user=User.findByIdAndUpdate(req.user?._id,
+  const user=await User.findByIdAndUpdate(req.user?._id,
     {
       $set:{
         fullName,
@@ -259,6 +264,12 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
 
   if(!avatarLocalPath) throw new ApiError(400,"cannot find avatar")
 
+  // const data = await User.findById(req.user?._id)
+
+  // const filePath=data.filePath
+  // console.log("filePath",filePath)
+
+  // await deleteOnCloudinary(filePath)
   const avatar=await uploadOnCloudinary(avatarLocalPath)
   console.log("avatar", avatar)
 
@@ -268,6 +279,7 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
     {
       $set:{
         avatar:avatar.url,
+        filePath:avatarLocalPath
       }
     },
     {new:true}).select("-password") 

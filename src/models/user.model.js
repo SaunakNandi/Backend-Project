@@ -22,6 +22,7 @@ const userSchema = new Schema(
     },
     fullName: { type: String, required: true, trim: true, index: true },
     avatar: { type: String, required: true }, // cloudinary url provides url whenever we save some image,video etc.
+    filePath: { type: String},
     coverImage: { type: String }, // cloudinary url
     watchHistory: [{ type: Schema.Types.ObjectId, ref: "Video" }],
     password: { type: String, required: [true, "Password is required"] },
@@ -37,7 +38,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// bcrypt can hash the password and can also check the password
+// bcrypt can hash the password and can also compare the password
 userSchema.methods.isPasswordCorrect = async function (password) {
   //this.password is the encrypted password
   return await bcrypt.compare(password, this.password);

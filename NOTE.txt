@@ -34,3 +34,8 @@ app.use(express.static("public"));: This line serves static files from the "publ
 app.use(cookieParser());: This line adds middleware to parse cookies from the incoming requests. The cookieParser() middleware parses cookies attached to the client's request and makes them available in the req.cookies object. This allows the server to easily work with cookies sent by the client.
 
 In summary, these lines of code set up an Express.js application with middleware for handling JSON and URL-encoded data in requests, serving static files from a "public" directory, and parsing cookies from incoming requests.
+
+
+=> httpOnly: When set to true, this property indicates that the cookie should be accessible only through the HTTP protocol. This helps to mitigate certain types of security risks, such as cross-site scripting (XSS), by preventing client-side scripts from accessing the cookie.
+
+=> secure: When set to true, this property indicates that the cookie should only be sent over secure, encrypted connections (HTTPS). This is an additional security measure to ensure that sensitive information in the cookie is transmitted securely.
