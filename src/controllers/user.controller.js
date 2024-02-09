@@ -306,4 +306,64 @@ const updateUserCoverImage=asyncHandler(async(req,res)=>{
     return res.status(200).json(new ApiResponse(200,user,"Cover Image updated"))
 })
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage };
+const getUserChannelProfile = asyncHandler(async(req,res)=>{
+  const {username}=req.params
+
+  if(!username?.trim()) throw new ApiError(400,"username is missing")
+
+  // learn subscription schema from the topic `Understand the subscription schema`
+  const channel=await User.aggregate([{
+    $match:{username:username?.toLowerCase()}},
+    {  // counting the subscribers of the current channel
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"channel",
+        as:"subscribers"
+      }
+    },
+    {
+      // channels I have subsribed
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"subscriber",
+        as:"subscribedTo"
+      }
+    },
+    {
+      $addFields:{
+        subscribersCount:{
+          $size:"$subscribers"
+        },
+        channelsSubscribedToCount:{
+          $size:"$subscribedTo"
+        },
+        isSubscribed:{
+          $cons:{  // check if the subscriber list has my id or not
+            if:{$in:[req.user?._id, "$subscribers.subscriber"]},
+            then:true,
+            else:false
+          }
+        }
+      }
+    },
+    {
+      $project:{
+        fullName:1,
+        username:1,
+        email:1,
+        avatar:1,
+        coverImage:1,
+        channelsSubscribedToCount:1,
+        subscribersCount:1,
+        isSubscribed:1,
+      }
+    }
+  ])
+  console.log(channel)
+  if(!channel?.length)  throw new ApiError(404,"Channel does not exists")
+
+  return res.status(200).json(new ApiResponse(200,channel[0],"Channel fetched successfully"))
+})
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage,getUserChannelProfile };
