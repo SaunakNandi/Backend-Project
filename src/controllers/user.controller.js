@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { deleteOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 /* { using asyncHandler you can see the error while sending api request in `Thunder Client`
@@ -313,8 +314,12 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
 
   // learn subscription schema from the topic `Understand the subscription schema`
   const channel=await User.aggregate([{
+  
     $match:{username:username?.toLowerCase()}},
     {  // counting the subscribers of the current channel
+
+      // the foreignField is present where the from is indicated like here subscriptions.(Subscription schema)
+      // localField is present in User using which the pipeline is written
       $lookup:{
         from:"subscriptions",
         localField:"_id",
@@ -331,7 +336,7 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
         as:"subscribedTo"
       }
     },
-    {
+    {  // adding the additional fields 
       $addFields:{
         subscribersCount:{
           $size:"$subscribers"
@@ -366,4 +371,87 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
 
   return res.status(200).json(new ApiResponse(200,channel[0],"Channel fetched successfully"))
 })
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage,getUserChannelProfile };
+
+const getWatchHistory= asyncHandler(async(req,res)=>{
+  // const user=await User.aggregate([
+  //   {
+  //     $match:{_id:req.user?._id}
+  //   },
+  //   {
+  //     $lookup:{
+  //       from:"subscriptions",
+  //       localField:"_id",
+  //       foreignField:"subscriber",
+  //       as:"watchHistory"
+  //     }
+  //   },
+  //   {
+  //     $unwind:"$watchHistory"
+  //   },
+  //   {
+  //     $lookup:{
+  //       from:"videos",
+  //       localField:"watchHistory.video",
+  //       foreignField:"_id",
+  //       as:"watchHistory.video"
+  //     }
+  //   },
+  //   {
+  //     $unwind:"$watchHistory.video"
+  //   },
+  //   {
+  //     $project:{
+  //       watchHistory:{
+  //         $slice:[
+  //           "$watchHistory",
+  //           10
+  //         ]
+  //       }
+  //     }
+  //   }
+  // ])
+  const user=await User.aggregate([
+    {
+      $match:{
+        _id:new mongoose.Types.ObjectId(req.user._id),
+      }
+    },
+    {
+      $lookup:{
+        from:"videos",
+        localField:"watchHistory",
+        foreignField:"_id",
+        as:"watchHistory",
+        pipeline:[
+          { // nesting (User -> Video ->User(owner points to User))
+            $lookup:{
+              from:"users",
+              localField:"owner",
+              foreignField:"_id",
+              as:"owner",
+              pipeline:[
+                {
+                   // whatever projected here will come under owner
+                  $project:{
+                    fullName:1,
+                    username:1,
+                    avatar:1,
+                  }
+                }
+              ]
+            }
+          },
+          {
+            $addFields:{
+              owner:{
+                $first:"$owner"  // the frontend can now use dot operator to takout the data from owner object
+              }
+            }
+          }
+        ]
+      }
+    }
+  ])
+})
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage,getUserChannelProfile, getWatchHistory };
