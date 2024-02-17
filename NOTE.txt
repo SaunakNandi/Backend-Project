@@ -39,3 +39,21 @@ In summary, these lines of code set up an Express.js application with middleware
 => httpOnly: When set to true, this property indicates that the cookie should be accessible only through the HTTP protocol. This helps to mitigate certain types of security risks, such as cross-site scripting (XSS), by preventing client-side scripts from accessing the cookie.
 
 => secure: When set to true, this property indicates that the cookie should only be sent over secure, encrypted connections (HTTPS). This is an additional security measure to ensure that sensitive information in the cookie is transmitted securely.
+
+
+=> jwt.verify(token, process.env.ACCESS_TOKEN_SECRET) 
+
+The code is checking whether the provided JWT (token) is valid by verifying its signature using the secret key (process.env.ACCESS_TOKEN_SECRET). If the signature is valid, it means the JWT has not been tampered with and can be trusted. If the verification is successful, the function typically returns the decoded content of the JWT, allowing the program to access the information stored within it. If the verification fails, it may throw an error or return a false value, depending on the implementation
+
+
+=> About upload.single("avatar") -> middleware
+When you use upload.single("avatar"):
+
+Multer looks for a file attached to the request under the field name "avatar."
+It processes the file according to the configured storage engine (in your case, it will use the disk storage defined earlier).
+It then attaches the information about the uploaded file to the req object, specifically to req.file.
+If you omit upload.single("avatar"):
+
+Express won't automatically process the file upload.
+The req.file object won't be populated with information about the uploaded file.
+In your updateUserAvatar function, you won't have access to the uploaded file's details, making it challenging to handle the avatar update logic correctly.

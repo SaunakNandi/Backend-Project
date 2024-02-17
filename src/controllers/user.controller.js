@@ -198,7 +198,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const user = await User.findById(decodedToken?._id)
     if (!user) throw new ApiError(404, "Invalid refresh token");
     
-    if(incomingRefreshToken!==user?.refreshToken) throw new ApiError(401, "Refresh token os expired or has been used");
+    if(incomingRefreshToken!==user?.refreshToken) throw new ApiError(401, "Refresh token is expired or has been used");
   
     const options={
       httpOnly: true,
@@ -223,11 +223,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword=asyncHandler(async (req,res) => {
   const {oldPassword,newPassword}=req.body
 
-  const user=await User.findById(req.user?._id)  // else try req.user?._id
+  // while doing verifyJwt before calling this function we are injecting user into req.user
+  const user=await User.findById(req.user?._id)  
 
   const isPasswordCorrect=await user.isPasswordCorrect(oldPassword)
 
-  if(isPasswordCorrect) throw new ApiError(400,"Invalid password")
+  if(!isPasswordCorrect) throw new ApiError(400,"Invalid password")
+  
   user.password = newPassword
   await user.save({validateBeforeSave:false})
 
@@ -263,7 +265,7 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
   const avatarLocalPath=req.file?.path
   console.log("Avatar Path", avatarLocalPath)
 
-  if(!avatarLocalPath) throw new ApiError(400,"cannot find avatar")
+  if(!avatarLocalPath) throw new ApiError(400,"Avatar Image is missing")
 
   // const data = await User.findById(req.user?._id)
 
@@ -274,7 +276,7 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
   const avatar=await uploadOnCloudinary(avatarLocalPath)
   console.log("avatar", avatar)
 
-  if(!avatar) throw new ApiError(400,"Error uploading avatar")
+  if(!avatar.url) throw new ApiError(400,"Error uploading avatar")
 
   const user=await User.findByIdAndUpdate(req.user?._id,
     {
@@ -290,12 +292,12 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
 const updateUserCoverImage=asyncHandler(async(req,res)=>{
 
   const avatarCoverImagePath=req.file?.path
-  if(!avatarCoverImagePath) throw new ApiError(400,"cannot find cover image")
+  if(!avatarCoverImagePath) throw new ApiError(400,"Cover Image is missing")
 
   const coverImage=await uploadOnCloudinary(avatarCoverImagePath)
   console.log("avatar", coverImage)
 
-  if(!coverImage) throw new ApiError(400,"Error uploading coverImage")
+  if(!coverImage.url) throw new ApiError(400,"Error uploading coverImage")
 
   const user=await User.findByIdAndUpdate(req.user?._id,
     {
@@ -328,7 +330,7 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
       }
     },
     {
-      // channels I have subsribed
+      // channels I have subscribed
       $lookup:{
         from:"subscriptions",
         localField:"_id",
@@ -373,43 +375,7 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
 })
 
 const getWatchHistory= asyncHandler(async(req,res)=>{
-  // const user=await User.aggregate([
-  //   {
-  //     $match:{_id:req.user?._id}
-  //   },
-  //   {
-  //     $lookup:{
-  //       from:"subscriptions",
-  //       localField:"_id",
-  //       foreignField:"subscriber",
-  //       as:"watchHistory"
-  //     }
-  //   },
-  //   {
-  //     $unwind:"$watchHistory"
-  //   },
-  //   {
-  //     $lookup:{
-  //       from:"videos",
-  //       localField:"watchHistory.video",
-  //       foreignField:"_id",
-  //       as:"watchHistory.video"
-  //     }
-  //   },
-  //   {
-  //     $unwind:"$watchHistory.video"
-  //   },
-  //   {
-  //     $project:{
-  //       watchHistory:{
-  //         $slice:[
-  //           "$watchHistory",
-  //           10
-  //         ]
-  //       }
-  //     }
-  //   }
-  // ])
+
   const user=await User.aggregate([
     {
       $match:{

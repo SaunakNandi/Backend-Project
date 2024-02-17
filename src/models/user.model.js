@@ -40,7 +40,9 @@ userSchema.pre("save", async function (next) {
 
 // bcrypt can hash the password and can also compare the password
 userSchema.methods.isPasswordCorrect = async function (password) {
-  //this.password is the encrypted password
+  // this.password is the encrypted password, so when you call user= await User.find...() and then user.isPasswordCorrect(password)
+  // this.password refer to the password saved in the database by that user calling the function
+
   return await bcrypt.compare(password, this.password);
 };
 

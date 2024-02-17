@@ -8,6 +8,8 @@ import {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
+  changeCurrentPassword,
+  updateAccountDetails,
   getWatchHistory
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -35,13 +37,13 @@ router.route("/login").post(loginUser);
 // next() used in verifyJWT() will help to run logoutUser() after verifyJWT is completed
 router.route("/logout").post(verifyJWT, logoutUser);
 
-
 // discussed in the part2 video tutorial at 1:11:25
 // endpoint for refresh tokens
+
 router.route("/refresh-token").post(refreshAccessToken);
 router.route("/change-password").post(verifyJWT,changeCurrentPassword);
 router.route("/current-user").get(verifyJWT,getCurrentUser);
-router.route("/update-account").patch(verifyJWT,updateAccountAccount);   // not using post as it will update all the details
+router.route("/update-account").patch(verifyJWT,updateAccountDetails);   // not using post as it will update all the details
 
 //upload.single("avatar") is the middleware
 router.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar);  // using post wll upfate all 
